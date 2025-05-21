@@ -1,0 +1,80 @@
+[
+    {
+        "opinion_id": "19323268",
+        "author": "w...z",
+        "recommendation": "Polecam",
+        "stars": "5/5",
+        "content": "Doskonały sposób spędzania czasu",
+        "pros": [],
+        "cons": [],
+        "useful": "0",
+        "unuseful": "0",
+        "post_date": "2024-12-26 11:48:37",
+        "purchase_date": "2024-12-17 13:36:22"
+    },
+    {
+        "opinion_id": "19614015",
+        "author": "k...a",
+        "recommendation": "Polecam",
+        "stars": "5/5",
+        "content": "wszystko ok",
+        "pros": [],
+        "cons": [],
+        "useful": "0",
+        "unuseful": "0",
+        "post_date": "2025-04-23 14:46:45",
+        "purchase_date": "2025-04-17 16:05:42"
+    },
+    {
+        "opinion_id": "19232290",
+        "author": "v...5",
+        "recommendation": "Polecam",
+        "stars": "5/5",
+        "content": "Rewelacja",
+        "pros": [],
+        "cons": [],
+        "useful": "0",
+        "unuseful": "0",
+        "post_date": "2024-11-25 12:04:00",
+        "purchase_date": "2024-11-17 14:06:05"
+    },
+    {
+        "opinion_id": "19405832",
+        "author": "p...s",
+        "recommendation": "Polecam",
+        "stars": "5/5",
+        "content": "Ok",
+        "pros": [],
+        "cons": [],
+        "useful": "0",
+        "unuseful": "0",
+        "post_date": "2025-01-27 16:42:00",
+        "purchase_date": "2025-01-21 22:32:43"
+    },
+    {
+        "opinion_id": "19387302",
+        "author": "a...a",
+        "recommendation": "Polecam",
+        "stars": "5/5",
+        "content": "OKI",
+        "pros": [],
+        "cons": [],
+        "useful": "0",
+        "unuseful": "0",
+        "post_date": "2025-01-20 11:39:46",
+        "purchase_date": "2024-12-03 11:18:19"
+    },
+    {
+        "opinion_id": "19393001",
+        "author": "e...a",
+        "recommendation": "Polecam",
+        "stars": "5/5",
+        "content": "ok",
+        "pros": [],
+        "cons": [],
+        "useful": "0",
+        "unuseful": "0",
+        "post_date": "2025-01-22 10:29:00",
+        "purchase_date": "2024-12-17 13:45:37"
+    }
+]
