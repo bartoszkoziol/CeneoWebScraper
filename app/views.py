@@ -1,17 +1,20 @@
 from app import app
 import os
 import json
-from bs4 import BeautifulSoup
-from flask import render_template, request, redirect, url_for
 import requests
+import matplotlib
+import pandas as pd
+from bs4 import BeautifulSoup
+from matplotlib import pyplot as plt
+from flask import render_template, request, redirect, url_for
 from config import headers
 from app import utils
-import pandas as pd
+
+matplotlib.use('Agg')
 
 @app.route("/")
-@app.route("/<name>")
-def index(name="World"):
-    return render_template("index.html", name=name)
+def index():
+    return render_template("index.html")
 
 @app.route("/extract")
 def display_form():
@@ -27,10 +30,10 @@ def extract():
         product_name = utils.extract_feature(page_dom, "h1")
         opinions_count = utils.extract_feature(page_dom, "a.product-review__link > span")
         if not opinions_count:
-            error = "Dla produktu o podanym id nie ma jeszcze żadnej opinii"
+            error="Dla produktu o podanym id nie ma jeszcze żadnych opinii"
             return render_template("extract.html", error=error)
     else:
-        error = "Nie znaleziono produktu o podanym id"
+        error="Nie znaleziono produktu o podanym id"
         return render_template("extract.html", error=error)
     all_opinions = []
     while next_page:
@@ -40,16 +43,17 @@ def extract():
             page_dom = BeautifulSoup(response.text, "html.parser")
             opinions = page_dom.select("div.js_product-review:not(.user-post--highlight)")
             for opinion in opinions:
-                    single_opinion = {
-                        key: utils.extract_feature(opinion, *value)
-                        for key, value in utils.selectors.items()
-                    }
-                    all_opinions.append(single_opinion)
+                single_opinion = {
+                    key: utils.extract_feature(opinion, *value)
+                    for key, value in utils.selectors.items()
+                }
+                all_opinions.append(single_opinion)
             try:
                 next_page = "https://www.ceneo.pl"+utils.extract_feature(page_dom, "a.pagination__next", "href")
             except TypeError:
                 next_page = None
-        else: print(response.status_code)
+        else:
+            print(response.status_code)
     if not os.path.exists("./app/data"):
         os.mkdir("./app/data")
     if not os.path.exists("./app/data/opinions"):
@@ -57,11 +61,39 @@ def extract():
     with open(f"./app/data/opinions/{product_id}.json", "w", encoding="UTF-8") as jf:
         json.dump(all_opinions, jf, indent=4, ensure_ascii=False)
 
+    opinions = pd.DataFrame.from_dict(all_opinions)
+    opinions.stars = opinions.stars.apply(lambda s: s.split("/")[0].replace(",", ".")).astype(float)
+    opinions.useful = opinions.useful.astype(int)
+    opinions.unuseful = opinions.unuseful.astype(int)
+
+    stats = {
+        'product_id': product_id,
+        'product_name': product_name,
+        "opinions_count": opinions.shape[0],
+        "pros_count": int(opinions.pros.astype(bool).sum()),
+        "cons_count": int(opinions.cons.astype(bool).sum()),
+        "pros_cons_count": int(opinions.apply(lambda o: bool(o.pros) and bool(o.cons), axis=1).sum()),
+        "average_stars": float(opinions.stars.mean()),
+        "pros": opinions.pros.explode().dropna().value_counts().to_dict(),
+        "cons": opinions.cons.explode().dropna().value_counts().to_dict(),
+        "recommendations": opinions.recommendation.value_counts(dropna=False).reindex(['Nie polecam','Polecam', None], fill_value=0).to_dict(),
+    }
+    if not os.path.exists("./app/data/products"):
+        os.mkdir("./app/data/products")
+    with open(f"./app/data/products/{product_id}.json", "w", encoding="UTF-8") as jf:
+        json.dump(stats, jf, indent=4, ensure_ascii=False)
+
     return redirect(url_for('product', product_id=product_id, product_name=product_name))
 
 @app.route("/products")
 def products():
-    return render_template("products.html")
+    products_files = os.listdir("./app/data/products")
+    products_list = []
+    for filename in products_files:
+        with open(f"./app/data/products/{filename}", "r", encoding="UTF-8") as jf:
+            product = json.load(jf)
+            products_list.append(product)
+    return render_template("products.html", products=products_list)
 
 @app.route("/author")
 def author():
@@ -70,5 +102,38 @@ def author():
 @app.route("/product/<product_id>")
 def product(product_id):
     product_name = request.args.get('product_name')
-    opinions = pd.read_json(f"./app/data/opinions/{product_id}.json")
-    return render_template("product.html", product_id=product_id, product_name=product_name, opinions=opinions.to_html(table_id='opinions'))
+    with open(f"./app/data/opinions/{product_id}.json", "r", encoding="UTF-8") as jf:
+        opinions = json.load(jf)
+    return render_template("product.html", product_id=product_id, product_name=product_name, opinions=opinions) 
+
+@app.route("/charts/<product_id>")
+def charts(product_id):
+    if not os.path.exists("./app/static/images/charts"):
+        os.makedirs("./app/static/images/charts")
+    with open(f"./app/data/products/{product_id}.json", "r", encoding="UTF-8") as jf:
+        stats = json.load(jf)
+    recommendations = pd.Series(stats['recommendations'])
+    recommendations.plot.pie(
+        label="",
+        title=f"Rozkład rekomendacji w opiniach o produkcie {product_id}",
+        labels=['Nie polecam','Polecam', "Nie mam zdania"],
+        colors=["crimson", 'forestgreen', "lightgrey"],
+        autopct="%1.1f%%"
+    )
+    plt.savefig(f"./app/static/images/charts/{stats['product_id']}_pie.png")
+    plt.close()
+    
+    with open(f"./app/data/opinions/{product_id}.json", "r", encoding="UTF-8") as jf:
+       opinions = pd.read_json(jf)
+    stars = opinions["stars"].value_counts().sort_index()
+    stars.plot.bar(
+            title = f"Liczba opinii z poszczególną liczbą gwiazdek dla produktu {product_id}"
+        )
+    
+    plt.xlabel("Liczba gwiazdek")
+    plt.ylabel("Liczba opinii")
+
+    plt.savefig(f"./app/static/images/charts/{product_id}_bar.png")
+    plt.close()
+
+    return render_template("charts.html", product_id=product_id, product_name=stats['product_name'])

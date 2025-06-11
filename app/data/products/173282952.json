@@ -1,0 +1,25 @@
+{
+    "product_id": "173282952",
+    "product_name": "Dreame H14 Dual",
+    "opinions_count": 10,
+    "pros_count": 3,
+    "cons_count": 1,
+    "pros_cons_count": 1,
+    "average_stars": 4.8,
+    "pros": {
+        "dobrze suszy wałek": 3,
+        "łatwa obsługa": 3,
+        "praktyczność": 3,
+        "oddzielne pojemniki": 3,
+        "wielkość": 3,
+        "latwa konserwacja": 2
+    },
+    "cons": {
+        "waga": 1
+    },
+    "recommendations": {
+        "Nie polecam": 0,
+        "Polecam": 10,
+        "null": 0
+    }
+}
